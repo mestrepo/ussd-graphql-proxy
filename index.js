@@ -9,6 +9,8 @@ String.prototype.replaceAll = function(search, replacement) {
 };
 
 const handler = (data, callback) => {
+  // {"Type":"Initiation","Mobile":"233542751610","SessionId":"ed38b7e7b0ca4c11af699b63da1aa1ae",
+  // "ServiceCode":"711*79","Message":"*711*79#","Operator":"mtn","Sequence":1,"ClientState":""}
   let string = JSON.stringify(JSON.parse(data)).slice(1, -1)
 
   string = string.replace('"Mobile"', 'Mobile')
@@ -19,6 +21,7 @@ const handler = (data, callback) => {
     .replace('"Sequence"', 'Sequence')
     .replace('"ClientState"', 'ClientState')
     .replace('"Type"', 'Type')
+    .replace('""', 'null')
 
   string = string.replaceAll(':', ': ')
     .replaceAll(',', ', ')
@@ -75,11 +78,15 @@ const server = http.createServer((req, res) => {
       statusCode = typeof statusCode === 'number' ? statusCode : 200
 
       let obj = JSON.parse(message)
+      let response = {
+        'Message': obj.data['getInitiationResponse'],
+        'Type': 'Response'
+      }
 
       // send a JSON response with the status code and the given message
       res.setHeader('Content-Type', 'application/json')
       res.writeHead(statusCode)
-      res.end(obj.data['getInitiationResponse'])
+      res.end(JSON.stringify(response))
     })
   })
 })
