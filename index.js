@@ -30,13 +30,12 @@ const server = http.createServer((req, res) => {
       // set a default status code
       statusCode = typeof statusCode === 'number' ? statusCode : 200
 
-      // create the JSON payload
-      const payload = { message }
+      let obj = JSON.parse(message)
 
       // send a JSON response with the status code and the given message
       res.setHeader('Content-Type', 'application/json')
       res.writeHead(statusCode)
-      res.end(JSON.stringify(payload))
+      res.end(obj.data['getInitiationResponse'])
     })
   })
 })
@@ -56,24 +55,68 @@ const handlers = {}
 
 handlers.notFound = (data, callback) => callback(404, 'Not Found')
 
+String.prototype.replaceAll = function(search, replacement) {
+  var target = this;
+  return target.replace(new RegExp(search, 'g'), replacement);
+};
+
 handlers.hello = (data, callback) => {
-  http.get('http://fortunecookieapi.herokuapp.com/v1/cookie', (resp) => {
-    let cookie = ''
+  let string = JSON.stringify(JSON.parse(data))
+  string = string.slice(1, -1);
+  string = string.replace('"Mobile"', 'Mobile').replace('"SessionId"', 'SessionId')
+  string = string.replace('"ServiceCode"', 'ServiceCode').replace('"Message"', 'Message')
+  string = string.replace('"Operator"', 'Operator').replace('"Sequence"', 'Sequence')
+  string = string.replace('"ClientState"', 'ClientState').replace('"Type"', 'Type')
+  string = string.replaceAll(':', ': ')
+  string = string.replaceAll(',', ', ')
+  string = string.replaceAll('"', '\\"')
+  string = '{"query":"query getInitiationResponse {getInitiationResponse(' + string + ')}"}'
+
+  /*
+  Construct a string like this:
+  '{"query":"query getInitiationResponse {getInitiationResponse(Sequence: 1, Mobile: \"233542751610\", SessionId: \"aeb67d5e6e6b48409ad19a43eaa62b91\", ServiceCode: \"711*78\", Operator: \"MTN\", Message: \"*711*78#\", ClientState: false, Type: \"Initiation\")}"}'
+  from this:
+  {
+    "Type":"Initiation",
+    "Mobile":"233244123456",
+    "SessionId":"bb3aece1deb543009c9f35b943c74b7f",
+    "ServiceCode":"714",
+    "Message":"*714#",
+    "Operator":"Vodafone",
+    "Sequence":1,
+    "ClientState":null
+  }
+  and send as body in post request.
+  */
+
+  const https = require('https')
+
+  const options = {
+    hostname: 'graphql-meteor-deone.c9users.io',
+    port: 443,
+    path: '/graphql',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': string.length
+    }
+  }
+
+  const req = https.request(options, (res) => {
+    console.log(`statusCode: ${res.statusCode}`)
   
-    // A chunk of data has been received.
-    resp.on('data', (chunk) => {
-      cookie += chunk
-    });
-  
-    // The whole response has been received. Return response.
-    resp.on('end', () => {
-      cookie = JSON.parse(cookie)[0].fortune.message
-      callback(200, `Hi there. You said ${data}. Here's a cookie for you - ${cookie}`)
-    });
-  
-  }).on("error", (err) => {
-    console.log("Error: " + err.message)
+    res.on('data', (d) => {
+      // process.stdout.write(d)
+      callback(200, `${d}`)
+    })
   })
+  
+  req.on('error', (error) => {
+    console.error(error)
+  })
+  
+  req.write(string)
+  req.end()
 }
 
 const router = {
