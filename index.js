@@ -8,10 +8,6 @@ String.prototype.replaceAll = function(search, replacement) {
   return target.replace(new RegExp(search, 'g'), replacement);
 };
 
-const sequenceActionMap = {
-  1: "query initiate"
-}
-
 const composeRequest = (data) => {
   const json = JSON.parse(data)
   console.log(json)
@@ -37,7 +33,12 @@ const composeRequest = (data) => {
     .replaceAll('"', '\\"')
 
   let actionType, action
-  [actionType, action] = sequenceActionMap[seq].split(' ')
+  if (seq === 1) {
+    actionType = 'query'
+    action = 'initiate'
+  } else {
+    
+  }
 
   return `{"query":"${actionType} ${action} {${action}(${string})}"}`
 }
