@@ -33,9 +33,16 @@ const composeRequest = (data) => {
 
   let actionType, action
   [actionType, action] = sequenceActionMap[seq].split(' ')
-  console.log(actionType, action)
 
   return `{"query":"${actionType} ${action} {${action}(${string})}"}`
+}
+
+const objToArray = (obj) => {
+  let arr = []
+  for(var i in obj)
+    arr.push(i)
+    arr.push(obj[i])
+  return arr
 }
 
 const handler = (data, callback) => {
@@ -90,9 +97,9 @@ const server = http.createServer((req, res) => {
       // set a default status code
       statusCode = typeof statusCode === 'number' ? statusCode : 200
 
-      let obj = JSON.parse(message)
-      let response = {
-        'Message': obj.data['getInitiationResponse'],
+      const obj = JSON.parse(message)
+      const response = {
+        'Message': objToArray(obj.data)[1],
         'Type': 'Response'
       }
 
