@@ -13,34 +13,38 @@ const composeRequest = (data) => {
   console.log(json)
 
   const seq = json['Sequence']
-  let string = JSON.stringify(json).slice(1, -1)
+  const type = json['Timeout']
 
-  string = string.replace('"Mobile"', 'Mobile')
-    .replace('"SessionId"', 'SessionId')
-    .replace('"ServiceCode"', 'ServiceCode')
-    .replace('"Message"', 'Message')
-    .replace('"Operator"', 'Operator')
-    .replace('"Sequence"', 'Sequence')
-    .replace('"ClientState"', 'ClientState')
-    .replace('"Type"', 'Type')
-    // .replace('""', 'null')
-
-  if (string.includes('""'))
-    string = string.replace('""', 'null')
-
-  string = string.replaceAll(':', ': ')
-    .replaceAll(',', ', ')
-    .replaceAll('"', '\\"')
-
-  let actionType, action
-  if (seq === 1) {
-    actionType = 'query'
-    action = 'initiate'
-  } else {
-    
+  if (type !== 'Timeout') {
+    let string = JSON.stringify(json).slice(1, -1)
+  
+    string = string.replace('"Mobile"', 'phoneNumber')
+      .replace('"SessionId"', 'sessionId')
+      .replace('"ServiceCode"', 'serviceCode')
+      .replace('"Message"', 'message')
+      .replace('"Operator"', 'operator')
+      .replace('"Sequence"', 'sequence')
+      .replace('"ClientState"', 'clientState')
+      .replace('"Type"', 'type')
+      // .replace('""', 'null')
+  
+    if (string.includes('""'))
+      string = string.replace('""', 'null')
+  
+    string = string.replaceAll(':', ': ')
+      .replaceAll(',', ', ')
+      .replaceAll('"', '\\"')
+  
+    let actionType, action
+    if (seq === 1) {
+      actionType = 'query'
+      action = 'initiate'
+    } else {
+      
+    }
+  
+    return `{"query":"${actionType} ${action} {${action}(${string})}"}`
   }
-
-  return `{"query":"${actionType} ${action} {${action}(${string})}"}`
 }
 
 const objToArray = (obj) => {
