@@ -9,11 +9,13 @@ String.prototype.replaceAll = function(search, replacement) {
 };
 
 const sequenceActionMap = {
-  1: "query getInitiationResponse"
+  1: "query initiate"
 }
 
 const composeRequest = (data) => {
   const json = JSON.parse(data)
+  console.log(json)
+
   const seq = json['Sequence']
   let string = JSON.stringify(json).slice(1, -1)
 
@@ -25,7 +27,10 @@ const composeRequest = (data) => {
     .replace('"Sequence"', 'Sequence')
     .replace('"ClientState"', 'ClientState')
     .replace('"Type"', 'Type')
-    .replace('""', 'null')
+    // .replace('""', 'null')
+
+  if (string.includes('""'))
+    string = string.replace('""', 'null')
 
   string = string.replaceAll(':', ': ')
     .replaceAll(',', ', ')
@@ -42,6 +47,7 @@ const objToArray = (obj) => {
   for(var i in obj)
     arr.push(obj[i][0])
     arr.push(obj[i][1])
+    arr.push(obj[i][2])
   return arr
 }
 
@@ -98,13 +104,13 @@ const server = http.createServer((req, res) => {
       statusCode = typeof statusCode === 'number' ? statusCode : 200
 
       const obj = JSON.parse(message)
-
-      let r, rType
-      [r, rType] = objToArray(obj.data)
+      let r, rType, ClientState
+      [r, rType, ClientState] = objToArray(obj.data)
 
       const response = {
         'Message': r,
-        'Type': rType
+        'Type': rType,
+        'ClientState': ClientState
       }
 
       // send a JSON response with the status code and the given message
