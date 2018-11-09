@@ -8,8 +8,15 @@ String.prototype.replaceAll = function(search, replacement) {
   return target.replace(new RegExp(search, 'g'), replacement);
 };
 
+const sequenceActionMap = {
+  1: "query getInitiationResponse"
+}
+
 const composeRequest = (data) => {
-  let string = JSON.stringify(JSON.parse(data)).slice(1, -1)
+  let json = JSON.parse(data)
+  let seq = json['Sequence']
+  let string = JSON.stringify(json).slice(1, -1)
+
   string = string.replace('"Mobile"', 'Mobile')
     .replace('"SessionId"', 'SessionId')
     .replace('"ServiceCode"', 'ServiceCode')
@@ -24,7 +31,11 @@ const composeRequest = (data) => {
     .replaceAll(',', ', ')
     .replaceAll('"', '\\"')
 
-  return '{"query":"query getInitiationResponse {getInitiationResponse(' + string + ')}"}'
+  let actionType, action
+  [actionType, action] = sequenceActionMap[seq].split(' ')
+  console.log(actionType, action)
+
+  return `{"query":"${actionType} ${action} {${action}(${string})}"}`
 }
 
 const handler = (data, callback) => {
