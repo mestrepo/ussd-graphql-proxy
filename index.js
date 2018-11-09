@@ -13,8 +13,8 @@ const sequenceActionMap = {
 }
 
 const composeRequest = (data) => {
-  let json = JSON.parse(data)
-  let seq = json['Sequence']
+  const json = JSON.parse(data)
+  const seq = json['Sequence']
   let string = JSON.stringify(json).slice(1, -1)
 
   string = string.replace('"Mobile"', 'Mobile')
@@ -40,8 +40,8 @@ const composeRequest = (data) => {
 const objToArray = (obj) => {
   let arr = []
   for(var i in obj)
-    arr.push(i)
-    arr.push(obj[i])
+    arr.push(obj[i][0])
+    arr.push(obj[i][1])
   return arr
 }
 
@@ -98,9 +98,13 @@ const server = http.createServer((req, res) => {
       statusCode = typeof statusCode === 'number' ? statusCode : 200
 
       const obj = JSON.parse(message)
+
+      let r, rType
+      [r, rType] = objToArray(obj.data)
+
       const response = {
-        'Message': objToArray(obj.data)[1],
-        'Type': 'Response'
+        'Message': r,
+        'Type': rType
       }
 
       // send a JSON response with the status code and the given message
