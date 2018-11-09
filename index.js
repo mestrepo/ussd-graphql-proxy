@@ -8,11 +8,8 @@ String.prototype.replaceAll = function(search, replacement) {
   return target.replace(new RegExp(search, 'g'), replacement);
 };
 
-const handler = (data, callback) => {
-  // {"Type":"Initiation","Mobile":"233542751610","SessionId":"ed38b7e7b0ca4c11af699b63da1aa1ae",
-  // "ServiceCode":"711*79","Message":"*711*79#","Operator":"mtn","Sequence":1,"ClientState":""}
+const composeRequest = (data) => {
   let string = JSON.stringify(JSON.parse(data)).slice(1, -1)
-
   string = string.replace('"Mobile"', 'Mobile')
     .replace('"SessionId"', 'SessionId')
     .replace('"ServiceCode"', 'ServiceCode')
@@ -27,8 +24,13 @@ const handler = (data, callback) => {
     .replaceAll(',', ', ')
     .replaceAll('"', '\\"')
 
-  string = '{"query":"query getInitiationResponse {getInitiationResponse(' + string + ')}"}'
+  return '{"query":"query getInitiationResponse {getInitiationResponse(' + string + ')}"}'
+}
 
+const handler = (data, callback) => {
+  // {"Type":"Initiation","Mobile":"233542751610","SessionId":"ed38b7e7b0ca4c11af699b63da1aa1ae",
+  // "ServiceCode":"711*79","Message":"*711*79#","Operator":"mtn","Sequence":1,"ClientState":""}
+  const string = composeRequest(data)
   const https = require('https')
 
   const options = {
