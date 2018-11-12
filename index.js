@@ -13,7 +13,7 @@ const composeRequest = (data) => {
   console.log(json)
 
   const seq = json['Sequence']
-  const type = json['Timeout']
+  const type = json['Type']
 
   if (type !== 'Timeout') {
     let string = JSON.stringify(json).slice(1, -1)
@@ -26,34 +26,16 @@ const composeRequest = (data) => {
       .replace('"Sequence"', 'sequence')
       .replace('"ClientState"', 'clientState')
       .replace('"Type"', 'type')
-      // .replace('""', 'null')
-  
-    if (string.includes('""'))
-      string = string.replace('""', 'null')
   
     string = string.replaceAll(':', ': ')
       .replaceAll(',', ', ')
       .replaceAll('"', '\\"')
   
-    let actionType, action
-    if (seq === 1) {
-      actionType = 'query'
-      action = 'initiate'
-    } else {
-      
-    }
+    const actionType = 'query'
+    const action = 'initiate'
   
     return `{"query":"${actionType} ${action} {${action}(${string})}"}`
   }
-}
-
-const objToArray = (obj) => {
-  let arr = []
-  for(var i in obj)
-    arr.push(obj[i][0])
-    arr.push(obj[i][1])
-    arr.push(obj[i][2])
-  return arr
 }
 
 const handler = (data, callback) => {
@@ -77,6 +59,7 @@ const handler = (data, callback) => {
     console.log(`statusCode: ${res.statusCode}`)
   
     res.on('data', (d) => {
+      console.log(`${d}`)
       // process.stdout.write(d)
       callback(200, `${d}`)
     })
@@ -97,7 +80,10 @@ const server = http.createServer((req, res) => {
   let buffer = ''
 
   // Read data into the buffer
-  req.on('data', data => (buffer += decoder.write(data)))
+  // req.on('data', data => (buffer += decoder.write(data)))
+  req.on('data', data => {
+    buffer += decoder.write(data)
+  })
 
   // until we reach the end of it
   req.on('end', () => {
@@ -110,7 +96,7 @@ const server = http.createServer((req, res) => {
 
       const obj = JSON.parse(message)
       let r, rType, ClientState
-      [r, rType, ClientState] = objToArray(obj.data)
+      [r, rType, ClientState] = obj.data['initiate']
 
       const response = {
         'Message': r,
