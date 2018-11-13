@@ -4,15 +4,43 @@ const StringDecoder = require('string_decoder').StringDecoder
 const { port, env } = require('./config')
 
 String.prototype.replaceAll = function(search, replacement) {
-  var target = this;
-  return target.replace(new RegExp(search, 'g'), replacement);
-};
+  var target = this
+  return target.replace(new RegExp(search, 'g'), replacement)
+}
+
+const getActionActionType = (seq, clientState, message) => {
+  if (seq === 1)
+    return ['query', 'initiate']
+
+  let action, actionType
+  actionType = 'mutation'
+
+  if (!clientState) {
+    // At this point,
+    // message ==== menuOption === clientState
+    // set message as menuOption in app and send same
+    // to Hubtel as clientState so we can know
+    // what menu to send next request to.
+    if (message === '2')
+      return [actionType, 'vote']
+
+    // Handle invalid messages (or menu options)
+    // e.g. 3, 4, 7 in this mutation
+    return [actionType, 'joinTeam']
+  }
+
+  if (clientState === '2')
+    return [actionType, 'vote']
+
+  // Handle invalid options
+  // e.g. 3, 4, 7 in this mutation
+  return [actionType, 'joinTeam']
+}
 
 const composeRequest = (data) => {
   const json = JSON.parse(data)
   console.log(json)
 
-  const seq = json['Sequence']
   const type = json['Type']
 
   if (type !== 'Timeout') {
@@ -30,9 +58,15 @@ const composeRequest = (data) => {
     string = string.replaceAll(':', ': ')
       .replaceAll(',', ', ')
       .replaceAll('"', '\\"')
-  
-    const actionType = 'query'
-    const action = 'initiate'
+
+    const seq = json['Sequence']
+    const message = json['Message']
+    const clientState = json['ClientState']
+
+    let [actionType, action] = getActionActionType(seq, clientState, message)
+
+    console.log('Action type:', actionType)
+    console.log('Action:', action)
   
     return `{"query":"${actionType} ${action} {${action}(${string})}"}`
   }
@@ -95,8 +129,14 @@ const server = http.createServer((req, res) => {
       statusCode = typeof statusCode === 'number' ? statusCode : 200
 
       const obj = JSON.parse(message)
+
+      let key
+      for (let i in obj.data) {
+        key = i
+      }
+
       let r, rType, ClientState
-      [r, rType, ClientState] = obj.data['initiate']
+      [r, rType, ClientState] = obj.data[key]
 
       const response = {
         'Message': r,
