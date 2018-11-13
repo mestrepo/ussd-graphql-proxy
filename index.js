@@ -29,12 +29,11 @@ const getActionActionType = (seq, clientState, message) => {
     return [actionType, 'joinTeam']
   }
 
+  if (clientState === '1')
+    return [actionType, 'joinTeam']
+
   if (clientState === '2')
     return [actionType, 'vote']
-
-  // Handle invalid options
-  // e.g. 3, 4, 7 in this mutation
-  return [actionType, 'joinTeam']
 }
 
 const composeRequest = (data) => {
