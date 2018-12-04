@@ -129,13 +129,11 @@ const server = http.createServer((req, res) => {
 
       const obj = JSON.parse(message)
 
-      let key
-      for (let i in obj.data) {
-        key = i
-      }
+      let keys = []
+      Object.keys(obj.data).forEach((key) => keys.push(key))
 
       let r, rType, ClientState
-      [r, rType, ClientState] = obj.data[key]
+      [r, rType, ClientState] = obj.data[keys[0]]
 
       const response = {
         'Message': r,
