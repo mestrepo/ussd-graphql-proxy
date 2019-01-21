@@ -21,22 +21,19 @@ const getActionActionType = (seq, clientState, message) => {
     // set message as menuOption in app and send same
     // to Hubtel as clientState so we can know
     // what menu to send next request to.
-    if (message === '2')
-      return [actionType, 'vote']
+    // if (message === '2')
+      // return [actionType, 'vote']
 
     // Handle invalid messages (or menu options)
     // e.g. 3, 4, 7 in this mutation
-    return [actionType, 'joinTeam']
+    return [actionType, 'vote']
   }
 
   if (clientState === '1')
-    return [actionType, 'joinTeam']
-
-  if (clientState === '2')
     return [actionType, 'vote']
 }
 
-const composeRequest = (data) => {
+const composeRequest = data => {
   const json = JSON.parse(data)
   console.log(json)
 
