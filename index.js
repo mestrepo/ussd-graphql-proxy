@@ -8,29 +8,10 @@ String.prototype.replaceAll = function(search, replacement) {
   return target.replace(new RegExp(search, 'g'), replacement)
 }
 
-const getActionActionType = (seq, clientState, message) => {
+const getActionActionType = (seq, message) => {
   if (seq === 1)
     return ['query', 'initiate']
-
-  let action, actionType
-  actionType = 'mutation'
-
-  if (!clientState) {
-    // At this point,
-    // message ==== menuOption === clientState
-    // set message as menuOption in app and send same
-    // to Hubtel as clientState so we can know
-    // what menu to send next request to.
-    // if (message === '2')
-      // return [actionType, 'vote']
-
-    // Handle invalid messages (or menu options)
-    // e.g. 3, 4, 7 in this mutation
-    return [actionType, 'vote']
-  }
-
-  if (clientState === '1')
-    return [actionType, 'vote']
+  return ['mutation', 'vote']
 }
 
 const composeRequest = data => {
@@ -57,9 +38,8 @@ const composeRequest = data => {
 
     const seq = json['Sequence']
     const message = json['Message']
-    const clientState = json['ClientState']
 
-    let [actionType, action] = getActionActionType(seq, clientState, message)
+    const [actionType, action] = getActionActionType(seq, message)
 
     console.log('Action type:', actionType)
     console.log('Action:', action)
@@ -105,6 +85,30 @@ const handler = (data, callback) => {
 
 // Configure the server to respond to all requests with a string
 const server = http.createServer((req, res) => {
+
+  const callback = (statusCode, message) => {
+    // set a default status code
+    statusCode = typeof statusCode === 'number' ? statusCode : 200
+
+    const obj = JSON.parse(message)
+
+    let keys = []
+    Object.keys(obj.data).forEach((key) => keys.push(key))
+
+    const [r, rType, ClientState] = obj.data[keys[0]]
+
+    const response = {
+      'Message': r,
+      'Type': rType,
+      'ClientState': ClientState
+    }
+
+    // send a JSON response with the status code and the given message
+    res.setHeader('Content-Type', 'application/json')
+    res.writeHead(statusCode)
+    res.end(JSON.stringify(response))
+  }
+
   // consume any data that's given and return it in the payload
   const decoder = new StringDecoder('utf-8')
   let buffer = ''
@@ -120,29 +124,7 @@ const server = http.createServer((req, res) => {
     buffer += decoder.end()
 
     // pass in the given data and a callback to handle the response
-    handler(buffer, (statusCode, message) => {
-      // set a default status code
-      statusCode = typeof statusCode === 'number' ? statusCode : 200
-
-      const obj = JSON.parse(message)
-
-      let keys = []
-      Object.keys(obj.data).forEach((key) => keys.push(key))
-
-      let r, rType, ClientState
-      [r, rType, ClientState] = obj.data[keys[0]]
-
-      const response = {
-        'Message': r,
-        'Type': rType,
-        'ClientState': ClientState
-      }
-
-      // send a JSON response with the status code and the given message
-      res.setHeader('Content-Type', 'application/json')
-      res.writeHead(statusCode)
-      res.end(JSON.stringify(response))
-    })
+    handler(buffer, callback)
   })
 })
 
