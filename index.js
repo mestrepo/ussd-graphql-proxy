@@ -8,10 +8,10 @@ String.prototype.replaceAll = function(search, replacement) {
   return target.replace(new RegExp(search, 'g'), replacement)
 }
 
-const getActionActionType = (seq, message) => {
+const getMutation = (seq) => {
   if (seq === 1)
-    return ['query', 'initiate']
-  return ['mutation', 'vote']
+    return 'initiate'
+  return 'vote'
 }
 
 const composeRequest = data => {
@@ -37,14 +37,11 @@ const composeRequest = data => {
       .replaceAll('"', '\\"')
 
     const seq = json['Sequence']
-    const message = json['Message']
+    const action = getMutation(seq)
 
-    const [actionType, action] = getActionActionType(seq, message)
-
-    console.log('Action type:', actionType)
     console.log('Action:', action)
   
-    return `{"query":"${actionType} ${action} {${action}(${string})}"}`
+    return `{"query":"mutation ${action} {${action}(${string})}"}`
   }
 }
 
